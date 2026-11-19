@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Account tabs</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; height: 46px; display: flex; align-items: center; gap: 4px; padding: 0 10px; background: #0F0F0E; border-bottom: 1px solid #262522;
+         font: 12px/1 Inter, system-ui, "Segoe UI", sans-serif; color: #B5B0A4; overflow-x: auto; white-space: nowrap; }
+  button { font: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 12px; border-radius: 8px;
+           border: 1px solid transparent; background: transparent; color: #B5B0A4; }
+  button:hover { background: #22211E; color: #F2EEE3; }
+  button[aria-selected=true] { background: #F2EEE3; color: #0A0A0A; font-weight: 600; }
+  .dot { width: 7px; height: 7px; border-radius: 2px; flex: none; }
+  .ag { font-size: 10px; font-weight: 700; border-radius: 5px; padding: 2px 5px; background: #2F7BFF; color: #0A0A0A; }
+  .right { margin-left: auto; display: flex; gap: 4px; align-items: center; }
+  .net { font-size: 11px; }
+</style>
+</head>
+<body>
+<div id="tabs" role="tablist" aria-label="Account tabs" style="display:flex;gap:4px"></div>
+<div class="right"><span class="net" id="net"></span><button id="home" title="Go to this account's upload page">Upload page</button></div>
+<script>
+const T = window.__TAURI__;
+const API = "http://127.0.0.1:8765";
+const dot = { tiktok: "#F2EEE3", instagram: "#E1306C", youtube: "#F2555A" };
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+async function draw() {
+  try {
+    const [tabs, active, st] = await Promise.all([fetch(API + "/api/tabs").then((r) => r.json()), T.core.invoke("active_tab"),
+      fetch(API + "/api/status").then((r) => r.json())]);
+    document.getElementById("tabs").innerHTML = tabs.map((t) => `<button role="tab" aria-selected="${t.key === active}" data-k="${esc(t.key)}"><span class="dot" style="background:${dot[t.platform]}"></span>${esc(t.key)}${t.agent ? `<span class="ag">${t.agent.endsWith("A") ? "A" : "B"}</span>` : ""}</button>`).join("");
+    const nb = st.italy_box || {};
+    document.getElementById("net").innerHTML = nb.ok ? `<span style="color:#3DD68C">● Italy box · ${esc(nb.city)}</span>` : `<span style="color:#F2555A">● Italy box offline</span>`;
+  } catch (e) {}
+}
+document.getElementById("tabs").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-k]"); if (b) T.core.invoke("switch_tab", { key: b.dataset.k }).then(draw);
+});
+document.getElementById("home").onclick = async () => { const k = await T.core.invoke("active_tab"); if (k) T.core.invoke("tab_home", { key: k }); };
+T.event.listen("reload", draw);
+draw(); setInterval(draw, 3000);
+</script>
+</body>
+</html>
