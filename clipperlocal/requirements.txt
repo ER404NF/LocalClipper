@@ -1,0 +1,16 @@
+fastapi>=0.110
+uvicorn>=0.29
+python-multipart>=0.0.9
+pyyaml>=6.0
+requests>=2.31
+numpy>=1.26
+yt-dlp>=2024.10.0
+faster-whisper>=1.0.3
+google-api-python-client>=2.120
+google-auth-oauthlib>=1.2
+qrcode>=7.4
+tzdata>=2024.1
+ddgs>=9.0
+trafilatura>=1.12
+playwright>=1.49
+PySocks>=1.7
